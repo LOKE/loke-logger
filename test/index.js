@@ -2,10 +2,11 @@ var logger = require('../lib').createLogger({
   system: 'dispatch',
   service: 'testing',
   level: 'debug',
-  console: true,
+  console: {
+    enabled: true
+  },
   papertrail: {
-    host: 'logs2.papertrailapp.com',
-    port: 10280
+    enabled: false
   }
 });
 var domain = require('domain');

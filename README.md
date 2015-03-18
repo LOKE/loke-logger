@@ -11,7 +11,9 @@ Docs coming soon...
 ```js
 var opts = {
     system: 'suiteName',
-    service: 'myService'
+    service: 'myService',
+    console: {enabled:true},
+    papertrail: {enabled:true, host:'logs.papertrailapp.com', port: 1234}
 };
 var logger = require('loke-logger').createLogger(opts);
 logger.info('Test');
