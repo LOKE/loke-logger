@@ -10,7 +10,7 @@
     "logger"
   ],
   "author": "Den Williams",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "chalk": "^0.5.1",
     "merge": "^1.2.0",
