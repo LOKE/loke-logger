@@ -1,7 +1,7 @@
 {
   "name": "loke-logger",
   "version": "1.2.0",
-  "description": "Logger module for LOKE applications",
+  "description": "Logger module for LOKE applications. Supports syslog and console output.",
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha",

@@ -5,7 +5,7 @@
 
 A multi-target logger tailored for LOKE Group and based around LOKE standards.
 
-Currently supports console output and Papertrail.
+Currently supports console output and syslog.
 
 ## Overview
 
