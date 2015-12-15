@@ -4,13 +4,12 @@
   "description": "Logger module for LOKE applications. Supports syslog and console output.",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha",
-    "lint": "standard"
+    "test": "npm run lint && mocha",
+    "lint": "eslint --ignore-path .gitignore ."
   },
   "keywords": [
     "logger"
   ],
-  "standard": {},
   "author": "Den Williams",
   "license": "MIT",
   "dependencies": {
@@ -19,10 +18,11 @@
     "winston-syslog": "^1.1.2"
   },
   "devDependencies": {
+    "eslint": "^1.10.3",
+    "eslint-config-xo": "^0.9.0",
     "expect": "^1.13.3",
     "mocha": "^2.3.4",
-    "sinon": "^1.17.2",
-    "standard": "^5.4.1"
+    "sinon": "^1.17.2"
   },
   "directories": {
     "test": "test"
