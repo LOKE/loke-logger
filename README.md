@@ -26,4 +26,16 @@ logger.info('eiusmod tempor incididunt ut');
 logger.debug('labore et dolore magna aliqua');
 ```
 
+
+## Options
+
+Alternatively, you can specify the outputs when the `lokeLogger` instance is created.
+
+```js
+var lokeLogger = require('loke-logger').create({
+  syslog: true,
+  console: true
+});
+```
+
 When finished, you need to call: `lokeLogger.stop()` in order to close any open connections.

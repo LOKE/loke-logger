@@ -40,6 +40,18 @@ describe('LOKELogger', function () {
     expect(stub.callCount).toBe(1)
   })
 
+  it('should log to console when the option is set', function () {
+    var logger = new LOKELogger({console: true})
+
+    var stub = sinon.stub(console, 'error')
+
+    logger
+    .create('http')
+    .error('Testing 123')
+
+    expect(stub.callCount).toBe(1)
+  })
+
   it('should log to syslog', function () {
     var logger = new LOKELogger()
 
