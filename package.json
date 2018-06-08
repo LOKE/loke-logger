@@ -1,32 +1,15 @@
 {
   "name": "loke-logger",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Logger module for LOKE applications. Supports syslog and console output.",
-  "main": "lib/index.js",
   "scripts": {
-    "test": "npm run lint && mocha",
-    "lint": "eslint --ignore-path .gitignore ."
+    "test": "xo && ava"
   },
   "keywords": [
     "logger"
   ],
   "author": "Den Williams",
   "license": "MIT",
-  "dependencies": {
-    "chalk": "^0.5.1",
-    "winston": "^2.1.1",
-    "winston-syslog": "^1.1.2"
-  },
-  "devDependencies": {
-    "eslint": "^1.10.3",
-    "eslint-config-xo": "^0.9.0",
-    "expect": "^1.13.3",
-    "mocha": "^2.3.4",
-    "sinon": "^1.17.2"
-  },
-  "directories": {
-    "test": "test"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LOKE/loke-logger.git"
@@ -34,5 +17,18 @@
   "bugs": {
     "url": "https://github.com/LOKE/loke-logger/issues"
   },
-  "homepage": "https://github.com/LOKE/loke-logger#readme"
+  "homepage": "https://github.com/LOKE/loke-logger#readme",
+  "dependencies": {
+    "chalk": "^2.3.1",
+    "glossy": "^0.1.7",
+    "prom-client": "^11.0.0"
+  },
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "xo": "^0.21.1"
+  },
+  "xo": {
+    "space": true,
+    "prettier": true
+  }
 }

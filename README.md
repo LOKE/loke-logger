@@ -9,33 +9,54 @@ Currently supports console output and syslog.
 
 ## Overview
 
+In version 3.x the api is a subset of `console`
+
+it includes `.debug()`, `.log()`, `.info()`, `.warn()` and `.error()`.
+
+in addition the is a withPrefix method that creates a logger child logger with a prefix;
+
 ```js
-var lokeLogger = require('loke-logger').create()
+const logger = require('loke-logger').create();
 
-lokeLogger
-.enableConsole()
-.enableSyslog();
-
-// Each logger object has a component name used to prefix all messages.
-// This is so we know which part of the system a message is from.
-var logger = lokeLogger.create('my-module')
 logger.error('Lorem ipsum');
 logger.warn('dolor sit amet consectetur');
-logger.notice('adipisicing elit sed do');
-logger.info('eiusmod tempor incididunt ut');
-logger.debug('labore et dolore magna aliqua');
+
+const httpLogger = logger.withPrefix('HTTP');
+
+httpLogger.info('eiusmod tempor incididunt ut');
+httpLogger.debug('labore et dolore magna aliqua');
 ```
 
 
-## Options
+## `create()` Options
 
-Alternatively, you can specify the outputs when the `lokeLogger` instance is created.
+There are a number of options when configuring the logger;
+
+### showDebug
+
+Type: `boolean`<br>
+Default: `false` when `NODE_ENV=production`, otherwise `true`
+
+Whether or not debug level logs should be emitted.
+
+### syslog
+
+Type: `boolean`<br>
+Default: `false`
+
+This option adds syslog udp messages to the output streams, console messages will still be emitted.
+
+### metricsRegistry
+
+Type: `Object`
+
+A [prom-client](https://github.com/siimon/prom-client) register to add metrics to.
 
 ```js
-var lokeLogger = require('loke-logger').create({
-  syslog: true,
-  console: true
+const {register} = require('prom-client');
+const logger = require('loke-logger').create({
+  metricsRegistry: register
 });
 ```
 
-When finished, you need to call: `lokeLogger.stop()` in order to close any open connections.
+This adds the metric `log_messages_total` with the labels `prefix` and `severity`.
