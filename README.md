@@ -13,20 +13,19 @@ In version 3.x the api is a subset of `console`
 
 it includes `.debug()`, `.log()`, `.info()`, `.warn()` and `.error()`.
 
-in addition the is a withPrefix method that creates a logger child logger with a prefix;
+in addition is a withPrefix method that creates a logger child logger with a prefix;
 
 ```js
-const logger = require('loke-logger').create();
+const logger = require("loke-logger").create();
 
-logger.error('Lorem ipsum');
-logger.warn('dolor sit amet consectetur');
+logger.error("Lorem ipsum");
+logger.warn("dolor sit amet consectetur");
 
-const httpLogger = logger.withPrefix('HTTP');
+const httpLogger = logger.withPrefix("HTTP");
 
-httpLogger.info('eiusmod tempor incididunt ut');
-httpLogger.debug('labore et dolore magna aliqua');
+httpLogger.info("eiusmod tempor incididunt ut");
+httpLogger.debug("labore et dolore magna aliqua");
 ```
-
 
 ## `create()` Options
 
@@ -53,10 +52,12 @@ Type: `Object`
 A [prom-client](https://github.com/siimon/prom-client) register to add metrics to.
 
 ```js
-const {register} = require('prom-client');
-const logger = require('loke-logger').create({
-  metricsRegistry: register
+const { register } = require("prom-client");
+const logger = require("loke-logger").create({
+	metricsRegistry: register
 });
+
+logger.error("Lorem ipsum");
 ```
 
 This adds the metric `log_messages_total` with the labels `prefix` and `severity`.

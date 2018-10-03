@@ -3,11 +3,9 @@
   "version": "3.0.0",
   "description": "Logger module for LOKE applications. Supports syslog and console output.",
   "scripts": {
-    "test": "xo && ava"
+    "test": "eslint . && ava"
   },
-  "keywords": [
-    "logger"
-  ],
+  "keywords": ["logger"],
   "author": "Den Williams",
   "license": "MIT",
   "repository": {
@@ -25,10 +23,10 @@
   },
   "devDependencies": {
     "ava": "^0.25.0",
-    "xo": "^0.21.1"
-  },
-  "xo": {
-    "space": true,
-    "prettier": true
+    "eslint": "^5.6.1",
+    "eslint-config-prettier": "^3.1.0",
+    "eslint-plugin-ava": "^5.1.1",
+    "eslint-plugin-prettier": "^3.0.0",
+    "prettier": "^1.14.3"
   }
 }

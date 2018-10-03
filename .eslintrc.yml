@@ -1,0 +1,15 @@
+env:
+  node: true
+extends:
+  - eslint:recommended
+  - plugin:ava/recommended
+  - plugin:prettier/recommended
+parserOptions:
+  ecmaVersion: 2016
+
+overrides:
+  - files:
+      - "**/*.test.js"
+      - "test.js"
+    parserOptions:
+      ecmaVersion: 2018

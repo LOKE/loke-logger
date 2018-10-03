@@ -1,15 +1,15 @@
-import test from 'ava';
-import logger from '.';
+import test from "ava";
+import logger from ".";
 
-test('Sanity check', t => {
-  t.true(logger.create({syslog: true}) instanceof logger.Logger);
+test("Sanity check", t => {
+  t.true(logger.create({ syslog: true }) instanceof logger.Logger);
   t.true(logger.create() instanceof logger.Logger);
 
-  const debug = logger.create({showDebug: true});
+  const debug = logger.create({ showDebug: true });
   t.is(debug.showDebug, true);
 });
 
-test('Registers a metric', t => {
+test("Registers a metric", t => {
   t.plan(1);
 
   const registry = {
@@ -18,5 +18,5 @@ test('Registers a metric', t => {
     }
   };
 
-  logger.create({metricsRegistry: registry});
+  logger.create({ metricsRegistry: registry });
 });
