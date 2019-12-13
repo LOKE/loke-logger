@@ -1,11 +1,13 @@
 {
-  "name": "loke-logger",
+  "name": "@loke/logger",
   "version": "3.0.0",
   "description": "Logger module for LOKE applications. Supports syslog and console output.",
   "scripts": {
     "test": "eslint . && ava"
   },
-  "keywords": ["logger"],
+  "keywords": [
+    "logger"
+  ],
   "author": "Den Williams",
   "license": "MIT",
   "repository": {
