@@ -1,6 +1,6 @@
 # LOKE Logger
 
-[![NPM Version](https://img.shields.io/npm/v/loke-logger.svg)](https://www.npmjs.com/package/@loke/logger)
+[![NPM Version](https://img.shields.io/npm/v/@loke/logger.svg)](https://www.npmjs.com/package/@loke/logger)
 [![Build Status](https://img.shields.io/travis/LOKE/loke-logger/master.svg)](https://travis-ci.org/LOKE/loke-logger)
 
 A multi-target logger tailored for LOKE Group and based around LOKE standards.
