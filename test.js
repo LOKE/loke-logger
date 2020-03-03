@@ -1,5 +1,5 @@
-import test from "ava";
-import logger from ".";
+const test = require("ava");
+const logger = require(".");
 
 test("Sanity check", t => {
   t.true(logger.create({ syslog: true }) instanceof logger.Logger);
