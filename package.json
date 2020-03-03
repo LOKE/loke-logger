@@ -3,7 +3,7 @@
   "version": "3.0.1",
   "description": "Logger module for LOKE applications. Supports syslog and console output.",
   "scripts": {
-    "test": "eslint . && ava"
+    "test": "eslint . && ava -v"
   },
   "keywords": [
     "logger"
