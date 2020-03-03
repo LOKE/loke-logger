@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/LOKE/loke-logger#readme",
   "dependencies": {
-    "chalk": "^2.3.1",
+    "chalk": "^3.0.0",
     "glossy": "^0.1.7",
     "prom-client": "^11.0.0"
   },
