@@ -13,7 +13,7 @@ test("logger metrics", (t) => {
     },
   });
   const logger = metricsMiddleware(registry)(
-    new LokeLogger({ streams: [stream], prefix: "PREFIX" })
+    new LokeLogger({ streams: [stream] })
   );
 
   logger.debug();
