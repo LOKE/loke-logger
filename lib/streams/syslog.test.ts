@@ -1,27 +1,25 @@
-const dgram = require("dgram");
-const test = require("ava");
-const { yellow } = require("chalk");
-const { Logger } = require("../logger");
-const { DEBUG, INFO, WARN, ERROR } = require("../common");
-const { SyslogStream } = require("./syslog");
+import dgram from "dgram";
+import test from "ava";
+import { yellow } from "chalk";
+import { LokeLogger } from "../logger";
+import { DEBUG, INFO, WARN, ERROR } from "../common";
+import { SyslogStream, mockable } from "./syslog";
 
 process.env.TZ = "utc";
 
-function createTestSocket() {
+async function createTestSocket() {
   const socket = dgram.createSocket("udp4");
 
-  const next = () =>
-    new Promise(resolve =>
-      socket.once("message", buf => resolve(buf.toString("utf8")))
+  const next = (): Promise<string> =>
+    new Promise((resolve) =>
+      socket.once("message", (buf) => resolve(buf.toString("utf8")))
     );
 
   const done = () => socket.close();
 
-  return new Promise(resolve =>
-    socket.bind(() => {
-      resolve({ next, done, port: socket.address().port });
-    })
-  );
+  await new Promise((resolve) => socket.bind(resolve));
+
+  return { next, done, port: socket.address().port };
 }
 
 class FakeDate extends Date {
@@ -31,20 +29,20 @@ class FakeDate extends Date {
 }
 
 // Bit of a hack, but it'll do for now
-global.Date = FakeDate;
+mockable.Date = FakeDate as never;
 
-test("logger with debug true", async t => {
+test("logger with debug true", async (t) => {
   const { next, done, port } = await createTestSocket();
-  const logger = new Logger({
+  const logger = new LokeLogger({
     showDebug: true,
     streams: [
       new SyslogStream({
         port,
         pid: 2607,
         hostname: "ip-10-0-0-115",
-        appName: "test"
-      })
-    ]
+        appName: "test",
+      }),
+    ],
   });
 
   logger.debug("debug message");
@@ -80,18 +78,18 @@ test("logger with debug true", async t => {
   done();
 });
 
-test("formatted messages", async t => {
+test("formatted messages", async (t) => {
   const { next, done, port } = await createTestSocket();
-  const logger = new Logger({
+  const logger = new LokeLogger({
     showDebug: true,
     streams: [
       new SyslogStream({
         port,
         pid: 2607,
         hostname: "ip-10-0-0-115",
-        appName: "test"
-      })
-    ]
+        appName: "test",
+      }),
+    ],
   });
 
   logger.info("%s message", 1, "other");
@@ -103,18 +101,18 @@ test("formatted messages", async t => {
   done();
 });
 
-test("with prefix", async t => {
+test("with prefix", async (t) => {
   const { next, done, port } = await createTestSocket();
-  const logger = new Logger({
+  const logger = new LokeLogger({
     showDebug: true,
     streams: [
       new SyslogStream({
         port,
         pid: 2607,
         hostname: "ip-10-0-0-115",
-        appName: "test"
-      })
-    ]
+        appName: "test",
+      }),
+    ],
   });
 
   logger.withPrefix("PREFIX").info("prefixed message");

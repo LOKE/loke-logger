@@ -1,3 +1,4 @@
+dist
 # Logs
 logs
 *.log
@@ -29,3 +30,5 @@ node_modules
 
 # Ignore lock because this is a module
 package-lock.json
+
+.vscode

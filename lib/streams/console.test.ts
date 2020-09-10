@@ -1,30 +1,33 @@
-const test = require("ava");
-const { yellow } = require("chalk");
-const { Logger } = require("../logger");
-const { DEBUG, INFO, WARN, ERROR } = require("../common");
-const { ConsoleStream } = require("./console");
+import test from "ava";
+import { Writable } from "stream";
+import { yellow } from "chalk";
+import { LokeLogger } from "../logger";
+import { DEBUG, INFO, WARN, ERROR } from "../common";
+import { ConsoleStream } from "./console";
 
-class MockWriter {
-  constructor() {
-    this.clear();
+function createTestWritable() {
+  const data: string[] = [];
+  const writable = new Writable({
+    objectMode: false,
+    write(chunk, encoding, callback) {
+      data.push(chunk.toString("utf8"));
+      callback();
+    },
+  });
+  function clear() {
+    data.length = 0;
   }
 
-  clear() {
-    this.data = [];
-  }
-
-  write(str) {
-    this.data.push(str);
-  }
+  return { writable, data, clear };
 }
 
-const stdout = new MockWriter();
-const stderr = new MockWriter();
+const stdout = createTestWritable();
+const stderr = createTestWritable();
 
-test("logger with debug true", t => {
-  const logger = new Logger({
+test("logger with debug true", (t) => {
+  const logger = new LokeLogger({
     showDebug: true,
-    streams: [new ConsoleStream(stdout, stderr)]
+    streams: [new ConsoleStream(stdout.writable, stderr.writable)],
   });
 
   logger.debug("debug message");
@@ -48,10 +51,10 @@ test("logger with debug true", t => {
   stderr.clear();
 });
 
-test("logger with debug false", t => {
-  const logger = new Logger({
+test("logger with debug false", (t) => {
+  const logger = new LokeLogger({
     showDebug: false,
-    streams: [new ConsoleStream(stdout, stderr)]
+    streams: [new ConsoleStream(stdout.writable, stderr.writable)],
   });
 
   logger.debug("debug message");
@@ -75,9 +78,9 @@ test("logger with debug false", t => {
   stderr.clear();
 });
 
-test("formatted messages", t => {
-  const logger = new Logger({
-    streams: [new ConsoleStream(stdout, stderr)]
+test("formatted messages", (t) => {
+  const logger = new LokeLogger({
+    streams: [new ConsoleStream(stdout.writable, stderr.writable)],
   });
 
   logger.info("%s message", 1, "other");
@@ -85,9 +88,9 @@ test("formatted messages", t => {
   stdout.clear();
 });
 
-test("with prefix", t => {
-  const logger = new Logger({
-    streams: [new ConsoleStream(stdout, stderr)]
+test("with prefix", (t) => {
+  const logger = new LokeLogger({
+    streams: [new ConsoleStream(stdout.writable, stderr.writable)],
   });
 
   logger.withPrefix("PREFIX").info("prefixed message");

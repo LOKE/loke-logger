@@ -1,8 +1,8 @@
-const test = require("ava");
-const { yellow } = require("chalk");
-const { format } = require("./common");
+import test from "ava";
+import { yellow } from "chalk";
+import { format } from "./common";
 
-test("formatting", t => {
+test("formatting", (t) => {
   t.is(
     format(undefined, "level", ["example %s", 100, "after"]),
     "level example 100 after"
@@ -22,7 +22,7 @@ test("formatting", t => {
 
   err.stack = [
     "Error: message",
-    "    at Thing.method (lib/thing.js:21:15)"
+    "    at Thing.method (lib/thing.js:21:15)",
   ].join("\n");
 
   t.is(
