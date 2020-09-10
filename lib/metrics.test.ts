@@ -1,13 +1,20 @@
-const test = require("ava");
-const { Registry } = require("prom-client");
-const { metricsMiddleware } = require("./metrics");
-const { nullLogger } = require("./null");
-const { Logger } = require("./logger");
-const { Writable } = require("stream");
+import test from "ava";
+import { Registry } from "prom-client";
+import { metricsMiddleware } from "./metrics";
+import { LokeLogger } from "./logger";
+import { Writable } from "stream";
 
-test("logger metrics", t => {
+test("logger metrics", (t) => {
   const registry = new Registry();
-  const logger = metricsMiddleware(registry)(nullLogger);
+  const stream = new Writable({
+    objectMode: true,
+    write(chunk, encoding, callback) {
+      callback();
+    },
+  });
+  const logger = metricsMiddleware(registry)(
+    new LokeLogger({ streams: [stream], prefix: "PREFIX" })
+  );
 
   logger.debug();
   logger.log();
@@ -18,7 +25,7 @@ test("logger metrics", t => {
   t.snapshot(registry.metrics());
 });
 
-test("prefix passes through", t => {
+test("prefix passes through", (t) => {
   const registry = new Registry();
   let lastWrite = null;
 
@@ -27,11 +34,11 @@ test("prefix passes through", t => {
     write(chunk, encoding, callback) {
       lastWrite = chunk;
       callback();
-    }
+    },
   });
 
   const logger = metricsMiddleware(registry)(
-    new Logger({ streams: [stream], prefix: "PREFIX" })
+    new LokeLogger({ streams: [stream], prefix: "PREFIX" })
   );
 
   logger.log("prefixed message");

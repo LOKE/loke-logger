@@ -1,18 +1,22 @@
-const { Counter } = require("prom-client");
+import { Counter, Registry } from "prom-client";
+import { LokeLogger } from "./logger";
 
-const wrap = (next, wrapper) => Object.assign(Object.create(next), wrapper);
+type Middleware = (next: LokeLogger) => LokeLogger;
+
+const wrap = (next: LokeLogger, wrapper: Partial<LokeLogger>): LokeLogger =>
+  Object.assign(Object.create(next), wrapper);
 
 const logCounter = new Counter({
   name: "log_messages_total",
   help: "Total count of log messages",
   labelNames: ["prefix", "severity"],
-  registers: []
+  registers: [],
 });
 
-exports.metricsMiddleware = registry => {
+export function metricsMiddleware(registry: Registry): Middleware {
   registry.registerMetric(logCounter);
 
-  return next => {
+  return (next: LokeLogger) => {
     return wrap(next, {
       debug(...args) {
         logCounter.inc({ severity: "debug", prefix: this.prefix || "<NONE>" });
@@ -33,7 +37,7 @@ exports.metricsMiddleware = registry => {
       error(...args) {
         logCounter.inc({ severity: "error", prefix: this.prefix || "<NONE>" });
         return next.error.apply(this, args);
-      }
+      },
     });
   };
-};
+}
