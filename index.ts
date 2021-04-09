@@ -11,14 +11,20 @@ export interface CreateLoggerOptions {
   syslog?: boolean;
   metricsRegistry?: Registry;
   showDebug?: boolean;
+  systemdPrefix?: boolean;
 }
+
+const systemd = Boolean(process.env.JOURNAL_STREAM);
 
 export function create({
   syslog = false,
   metricsRegistry,
   showDebug,
+  systemdPrefix = systemd,
 }: CreateLoggerOptions = {}): LokeLogger {
-  const streams: NodeJS.WritableStream[] = [new ConsoleStream()];
+  const streams: NodeJS.WritableStream[] = [
+    new ConsoleStream(undefined, undefined, systemdPrefix),
+  ];
 
   if (syslog) {
     streams.push(new SyslogStream());
