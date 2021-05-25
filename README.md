@@ -45,6 +45,13 @@ Default: `false`
 
 This option adds syslog udp messages to the output streams, console messages will still be emitted.
 
+### systemdPrefix
+
+Type: `boolean`<br>
+Default: `true` when `JOURNAL_STREAM` set, otherwise `false`
+
+This option prefixes stdout with systemd's severity syntax
+
 ### metricsRegistry
 
 Type: `Object`
@@ -54,7 +61,7 @@ A [prom-client](https://github.com/siimon/prom-client) register to add metrics t
 ```js
 const { register } = require("prom-client");
 const logger = require("loke-logger").create({
-  metricsRegistry: register
+  metricsRegistry: register,
 });
 
 logger.error("Lorem ipsum");
