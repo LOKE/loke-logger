@@ -4,7 +4,7 @@ import { metricsMiddleware } from "./metrics";
 import { LokeLogger } from "./logger";
 import { Writable } from "stream";
 
-test("logger metrics", (t) => {
+test("logger metrics", async (t) => {
   const registry = new Registry();
   const stream = new Writable({
     objectMode: true,
@@ -22,7 +22,7 @@ test("logger metrics", (t) => {
   logger.warn();
   logger.error();
 
-  t.snapshot(registry.metrics());
+  t.snapshot(await registry.metrics());
 });
 
 test("prefix passes through", (t) => {
