@@ -100,3 +100,29 @@ test("with prefix", (t) => {
   t.is(stdout.data[0], `${INFO} ${PREFIX}: prefixed message\n`);
   stdout.clear();
 });
+
+test("logger systemd prefix", (t) => {
+  const logger = new LokeLogger({
+    streams: [new ConsoleStream(stdout.writable, stderr.writable, true)],
+  });
+
+  logger.debug("debug message");
+  t.is(stdout.data[0], `<7>${DEBUG} debug message\n`);
+  stdout.clear();
+
+  logger.log("log message");
+  t.is(stdout.data[0], `<6>${INFO} log message\n`);
+  stdout.clear();
+
+  logger.info("info message");
+  t.is(stdout.data[0], `<6>${INFO} info message\n`);
+  stdout.clear();
+
+  logger.warn("warn message");
+  t.is(stderr.data[0], `<4>${WARN} warn message\n`);
+  stderr.clear();
+
+  logger.error("error message");
+  t.is(stderr.data[0], `<3>${ERROR} error message\n`);
+  stderr.clear();
+});

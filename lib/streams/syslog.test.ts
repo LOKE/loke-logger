@@ -17,7 +17,7 @@ async function createTestSocket() {
 
   const done = () => socket.close();
 
-  await new Promise((resolve) => socket.bind(resolve));
+  await new Promise<void>((resolve) => socket.bind(resolve));
 
   return { next, done, port: socket.address().port };
 }
