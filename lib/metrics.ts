@@ -13,7 +13,7 @@ const logCounter = new Counter({
   registers: [],
 });
 
-interface Registry {
+export interface Registry {
   registerMetric<T extends string>(metric: Metric<T>): void;
 }
 
