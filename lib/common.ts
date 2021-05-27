@@ -16,6 +16,7 @@ export const ERROR = red("ERRO");
 export function format(
   prefix: string | undefined,
   level: string,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
   args: any
 ): string {
   return level + " " + formatPrefix(prefix) + util.format.apply(null, args);

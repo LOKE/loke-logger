@@ -1,3 +1,5 @@
+import { Logger } from "./logger";
+
 export const nullLogger = {
   prefix: "null",
   debug(): void {
@@ -15,7 +17,7 @@ export const nullLogger = {
   error(): void {
     return;
   },
-  withPrefix() {
+  withPrefix(): Logger {
     return nullLogger;
   },
 };
