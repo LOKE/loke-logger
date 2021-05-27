@@ -1,6 +1,6 @@
 {
   "name": "@loke/logger",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "description": "Logger module for LOKE applications. Supports syslog and console output.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
