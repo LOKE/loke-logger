@@ -1,4 +1,4 @@
-import { Counter, Metric } from "prom-client";
+import { Counter, Registry } from "prom-client";
 import { LokeLogger } from "./logger";
 
 type Middleware = (next: LokeLogger) => LokeLogger;
@@ -12,10 +12,6 @@ const logCounter = new Counter({
   labelNames: ["prefix", "severity"],
   registers: [],
 });
-
-export interface Registry {
-  registerMetric<T extends string>(metric: Metric<T>): void;
-}
 
 export function metricsMiddleware(registry: Registry): Middleware {
   registry.registerMetric(logCounter);

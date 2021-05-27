@@ -1,6 +1,7 @@
 import { SyslogStream, ConsoleStream } from "./lib/streams";
 import { LokeLogger } from "./lib/logger";
-import { metricsMiddleware, Registry } from "./lib/metrics";
+import { metricsMiddleware } from "./lib/metrics";
+import { Registry } from "prom-client";
 
 export { SyslogStream, ConsoleStream } from "./lib/streams";
 export { LokeLogger, Logger } from "./lib/logger";
