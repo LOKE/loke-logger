@@ -16,7 +16,7 @@ it includes `.debug()`, `.log()`, `.info()`, `.warn()` and `.error()`.
 in addition is a withPrefix method that creates a logger child logger with a prefix;
 
 ```js
-const logger = require("loke-logger").create();
+const logger = require("@loke/logger").create();
 
 logger.error("Lorem ipsum");
 logger.warn("dolor sit amet consectetur");
@@ -60,7 +60,7 @@ A [prom-client](https://github.com/siimon/prom-client) register to add metrics t
 
 ```js
 const { register } = require("prom-client");
-const logger = require("loke-logger").create({
+const logger = require("@loke/logger").create({
   metricsRegistry: register,
 });
 
