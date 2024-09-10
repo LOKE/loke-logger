@@ -13,7 +13,7 @@ test("logger metrics", async (t) => {
     },
   });
   const logger = metricsMiddleware(registry)(
-    new LokeLogger({ streams: [stream] })
+    new LokeLogger({ streams: [stream] }),
   );
 
   logger.debug();
@@ -38,7 +38,7 @@ test("prefix passes through", (t) => {
   });
 
   const logger = metricsMiddleware(registry)(
-    new LokeLogger({ streams: [stream], prefix: "PREFIX" })
+    new LokeLogger({ streams: [stream], prefix: "PREFIX" }),
   );
 
   logger.log("prefixed message");

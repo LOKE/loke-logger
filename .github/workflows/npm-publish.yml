@@ -2,34 +2,27 @@ on: push
 
 jobs:
   test-prom-client-versions:
+    strategy:
+      matrix:
+        prom-client-version: [11, 12, 13, 14, 15]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 12
-      - run: npm install
-
-      - run: npm install prom-client@12
-      - run: npm run build
-      - run: npm test
-
-      - run: npm install prom-client@13
-      - run: npm run build
-      - run: npm test
-
-      - run: npm install prom-client@14
+          node-version: 20
+      - run: npm ci
+      - run: npm i -D prom-client@${{matrix.prom-client-version}}
       - run: npm run build
       - run: npm test
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 12
-      - run: npm install
-      - run: npm test
-      - uses: JS-DevTools/npm-publish@v1
+          node-version: 20
+      - run: npm cit
+      - uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}

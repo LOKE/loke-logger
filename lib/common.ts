@@ -1,4 +1,4 @@
-import util from "util";
+import util from "node:util";
 import { cyan, blue, yellow, red } from "chalk";
 
 const formatPrefix = (prefix?: string) => (prefix ? yellow(prefix) + ": " : "");
@@ -17,7 +17,7 @@ export function format(
   prefix: string | undefined,
   level: string,
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
-  args: any
+  args: any,
 ): string {
   return level + " " + formatPrefix(prefix) + util.format.apply(null, args);
 }

@@ -28,7 +28,4 @@ node_modules
 # Users Environment Variables
 .lock-wscript
 
-# Ignore lock because this is a module
-package-lock.json
-
 .vscode

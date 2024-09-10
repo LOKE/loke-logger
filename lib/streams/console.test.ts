@@ -1,5 +1,5 @@
+import { Writable } from "node:stream";
 import test from "ava";
-import { Writable } from "stream";
 import { yellow } from "chalk";
 import { LokeLogger } from "../logger";
 import { DEBUG, INFO, WARN, ERROR } from "../common";

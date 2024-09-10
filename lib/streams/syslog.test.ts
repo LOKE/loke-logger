@@ -1,4 +1,4 @@
-import dgram from "dgram";
+import dgram from "node:dgram";
 import test from "ava";
 import { yellow } from "chalk";
 import { LokeLogger } from "../logger";
@@ -12,10 +12,10 @@ async function createTestSocket() {
 
   const next = (): Promise<string> =>
     new Promise((resolve) =>
-      socket.once("message", (buf) => resolve(buf.toString("utf8")))
+      socket.once("message", (buf) => resolve(buf.toString("utf8"))),
     );
 
-  const done = () => socket.close();
+  const done = () => new Promise<void>((resolve) => socket.close(resolve));
 
   await new Promise<void>((resolve) => socket.bind(resolve));
 
@@ -33,86 +33,85 @@ mockable.Date = FakeDate as never;
 
 test("logger with debug true", async (t) => {
   const { next, done, port } = await createTestSocket();
+  const syslog = new SyslogStream({
+    port,
+    pid: 2607,
+    hostname: "ip-10-0-0-115",
+    appName: "test",
+  });
   const logger = new LokeLogger({
     showDebug: true,
-    streams: [
-      new SyslogStream({
-        port,
-        pid: 2607,
-        hostname: "ip-10-0-0-115",
-        appName: "test",
-      }),
-    ],
+    streams: [syslog],
   });
 
   logger.debug("debug message");
   t.is(
     await next(),
-    `<135>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${DEBUG} debug message`
+    `<135>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${DEBUG} debug message`,
   );
 
   logger.log("log message");
   t.is(
     await next(),
-    `<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${INFO} log message`
+    `<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${INFO} log message`,
   );
 
   logger.info("info message");
   t.is(
     await next(),
-    `<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${INFO} info message`
+    `<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${INFO} info message`,
   );
 
   logger.warn("warn message");
   t.is(
     await next(),
-    `<132>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${WARN} warn message`
+    `<132>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${WARN} warn message`,
   );
 
   logger.error("error message");
   t.is(
     await next(),
-    `<131>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${ERROR} error message`
+    `<131>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${ERROR} error message`,
   );
 
-  done();
+  syslog.close();
+  await done();
 });
 
 test("formatted messages", async (t) => {
   const { next, done, port } = await createTestSocket();
+  const syslog = new SyslogStream({
+    port,
+    pid: 2607,
+    hostname: "ip-10-0-0-115",
+    appName: "test",
+  });
   const logger = new LokeLogger({
     showDebug: true,
-    streams: [
-      new SyslogStream({
-        port,
-        pid: 2607,
-        hostname: "ip-10-0-0-115",
-        appName: "test",
-      }),
-    ],
+    streams: [syslog],
   });
 
   logger.info("%s message", 1, "other");
   t.is(
     await next(),
-    `<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${INFO} 1 message other`
+    `<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${INFO} 1 message other`,
   );
 
-  done();
+  syslog.close();
+  await done();
 });
 
 test("with prefix", async (t) => {
   const { next, done, port } = await createTestSocket();
+  const syslog = new SyslogStream({
+    port,
+    pid: 2607,
+    hostname: "ip-10-0-0-115",
+    appName: "test",
+  });
   const logger = new LokeLogger({
     showDebug: true,
-    streams: [
-      new SyslogStream({
-        port,
-        pid: 2607,
-        hostname: "ip-10-0-0-115",
-        appName: "test",
-      }),
-    ],
+    streams: [syslog],
   });
 
   logger.withPrefix("PREFIX").info("prefixed message");
@@ -121,8 +120,9 @@ test("with prefix", async (t) => {
 
   t.is(
     await next(),
-    `<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${INFO} ${PREFIX}: prefixed message`
+    `<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - ${INFO} ${PREFIX}: prefixed message`,
   );
 
-  done();
+  syslog.close();
+  await done();
 });

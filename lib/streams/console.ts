@@ -1,4 +1,4 @@
-import { Writable } from "stream";
+import { Writable } from "node:stream";
 
 import { DEBUG, INFO, WARN, ERROR, Log } from "../common";
 
@@ -17,7 +17,7 @@ export class ConsoleStream extends Writable {
   constructor(
     stdout: NodeJS.WritableStream = process.stdout,
     stderr: NodeJS.WritableStream = process.stderr,
-    systemdPrefix = false
+    systemdPrefix = false,
   ) {
     super({ objectMode: true });
     this.stdout = stdout;

@@ -1,6 +1,6 @@
-import os from "os";
-import dgram from "dgram";
-import { Writable } from "stream";
+import os from "node:os";
+import dgram from "node:dgram";
+import { Writable } from "node:stream";
 import glossy from "glossy";
 
 import { DEBUG, INFO, WARN, ERROR, Log } from "../common";
@@ -64,5 +64,9 @@ export class SyslogStream extends Writable {
     this.socket.send(syslogMsg, this.port, this.host);
 
     callback();
+  }
+
+  close(): void {
+    this.socket.close();
   }
 }

@@ -1,5 +1,8 @@
 import { Counter, Registry } from "prom-client";
+import chalk from "chalk";
 import { LokeLogger } from "./logger";
+
+chalk.level = 0;
 
 type Middleware = (next: LokeLogger) => LokeLogger;
 
