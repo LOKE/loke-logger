@@ -49,6 +49,10 @@ test("logger with debug true", (t) => {
   logger.error("error message");
   t.is(stderr.data[0], `${ERROR} error message\n`);
   stderr.clear();
+
+  logger.log("multiline\nmessage");
+  t.is(stdout.data[0], `${INFO} multiline\nmessage\n`);
+  stdout.clear();
 });
 
 test("logger with debug false", (t) => {
@@ -101,9 +105,9 @@ test("with prefix", (t) => {
   stdout.clear();
 });
 
-test("logger systemd prefix", (t) => {
+test("logger systemd prefix and newline escaping", (t) => {
   const logger = new LokeLogger({
-    streams: [new ConsoleStream(stdout.writable, stderr.writable, true)],
+    streams: [new ConsoleStream(stdout.writable, stderr.writable, true, true)],
   });
 
   logger.debug("debug message");
@@ -125,4 +129,8 @@ test("logger systemd prefix", (t) => {
   logger.error("error message");
   t.is(stderr.data[0], `<3>${ERROR} error message\n`);
   stderr.clear();
+
+  logger.log("multiline\nmessage");
+  t.is(stdout.data[0], `<6>${INFO} multiline\\nmessage\n`);
+  stdout.clear();
 });
