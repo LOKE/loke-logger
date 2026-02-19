@@ -16,13 +16,14 @@ export interface CreateLoggerOptions {
 }
 
 const systemd = Boolean(process.env.JOURNAL_STREAM);
+const kubernetes = Boolean(process.env.KUBERNETES_SERVICE_HOST);
 
 export function create({
   syslog = false,
   metricsRegistry,
   showDebug,
   systemdPrefix = systemd,
-  escapeNewlines = systemd,
+  escapeNewlines = systemd || kubernetes,
 }: CreateLoggerOptions = {}): LokeLogger {
   const streams: NodeJS.WritableStream[] = [
     new ConsoleStream(undefined, undefined, systemdPrefix, escapeNewlines),
