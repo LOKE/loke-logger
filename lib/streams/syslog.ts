@@ -1,18 +1,9 @@
-import os from "node:os";
 import dgram from "node:dgram";
+import os from "node:os";
 import { Writable } from "node:stream";
-import glossy from "glossy";
+import type { Log, LogLevel } from "../common";
 
-import { DEBUG, INFO, WARN, ERROR, Log } from "../common";
-
-export const mockable = { Date };
-
-const SYSLOG_LEVELS = new Map([
-  [DEBUG, "debug"],
-  [INFO, "info"],
-  [WARN, "warning"],
-  [ERROR, "error"],
-]);
+export const mockable: { Date: new () => Date } = { Date };
 
 interface SyslogStreamOptions {
   host?: string;
@@ -23,12 +14,26 @@ interface SyslogStreamOptions {
   appName?: string;
 }
 
+const priorities: Record<LogLevel, number> = {
+  debug: 135,
+  info: 134,
+  warn: 132,
+  error: 131,
+};
+
+function headerField(value: string, length: number): string {
+  return value.replace(/[^!-~]/g, "").slice(0, length) || "-";
+}
+
 export class SyslogStream extends Writable {
-  private host: string;
-  private port: number;
-  private socket: dgram.Socket;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private producer: any;
+  private readonly host: string;
+  private readonly port: number;
+  private readonly socket: dgram.Socket;
+  private readonly ownsSocket: boolean;
+  private readonly header: string;
+  private readonly onSocketError = (error: Error): void => {
+    this.destroy(error);
+  };
 
   constructor({
     host,
@@ -40,33 +45,47 @@ export class SyslogStream extends Writable {
   }: SyslogStreamOptions = {}) {
     super({ objectMode: true });
     this.host = host || "127.0.0.1";
-    this.port = port || 514;
-    this.socket = socket || dgram.createSocket("udp4");
-
-    this.producer = new glossy.Produce({
-      type: "RFC5424",
-      facility: "local0",
-      appName: appName || process.title,
-      pid: pid || process.pid,
-      host: hostname || os.hostname().split(".")[0],
-    });
+    this.port = port ?? 514;
+    this.socket = socket ?? dgram.createSocket("udp4");
+    this.ownsSocket = socket === undefined;
+    this.header = `${headerField(hostname ?? os.hostname().split(".")[0], 255)} ${headerField(appName ?? process.title, 48)} ${headerField(String(pid ?? process.pid), 128)} - -`;
+    this.socket.on("error", this.onSocketError);
   }
 
-  _write(log: Log, _: string, callback: () => void): void {
-    const { level, message } = log;
+  _write(log: Log, _: string, callback: (error?: Error | null) => void): void {
+    const message = `<${priorities[log.level]}>1 ${new mockable.Date().toISOString()} ${this.header} \uFEFF${log.message}`;
+    try {
+      this.socket.send(message, this.port, this.host, callback);
+    } catch (error) {
+      callback(error instanceof Error ? error : new Error(String(error)));
+    }
+  }
 
-    const syslogMsg: string = this.producer.produce({
-      severity: SYSLOG_LEVELS.get(level),
-      date: new mockable.Date(),
-      message,
-    });
-
-    this.socket.send(syslogMsg, this.port, this.host);
-
-    callback();
+  _destroy(
+    error: Error | null,
+    callback: (error?: Error | null) => void,
+  ): void {
+    this.socket.removeListener("error", this.onSocketError);
+    if (!this.ownsSocket) {
+      callback(error);
+      return;
+    }
+    try {
+      this.socket.close(() => callback(error));
+    } catch (closeError) {
+      const failure =
+        closeError instanceof Error
+          ? closeError
+          : new Error(String(closeError));
+      callback(
+        "code" in failure && failure.code === "ERR_SOCKET_DGRAM_NOT_RUNNING"
+          ? error
+          : failure,
+      );
+    }
   }
 
   close(): void {
-    this.socket.close();
+    this.end();
   }
 }
