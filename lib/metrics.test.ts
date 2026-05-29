@@ -16,16 +16,16 @@ test("logger metrics", async (t) => {
     new LokeLogger({ streams: [stream] }),
   );
 
-  logger.debug();
-  logger.log();
-  logger.info();
-  logger.warn();
-  logger.error();
+  logger.debug("test");
+  logger.log("test");
+  logger.info("test");
+  logger.warn("test");
+  logger.error("test");
 
   t.snapshot(await registry.metrics());
 });
 
-test("prefix passes through", (t) => {
+test("domain passes through", (t) => {
   const registry = new Registry();
   let lastWrite = null;
 
@@ -38,12 +38,12 @@ test("prefix passes through", (t) => {
   });
 
   const logger = metricsMiddleware(registry)(
-    new LokeLogger({ streams: [stream], prefix: "PREFIX" }),
+    new LokeLogger({ streams: [stream], domain: "my-service" }),
   );
 
   logger.log("prefixed message");
   t.snapshot(lastWrite);
 
-  logger.withPrefix("OTHER_PREFIX").log("prefixed message");
+  logger.withDomain("other-service").log("domain message");
   t.snapshot(lastWrite);
 });

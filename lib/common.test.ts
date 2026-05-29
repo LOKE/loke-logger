@@ -1,40 +1,59 @@
 import test from "ava";
-import { yellow } from "chalk";
-import { format } from "./common";
+import { format, printf } from "./common";
 
-test("formatting", (t) => {
+test("printf", (t) => {
+  t.is(printf("example %s", 100, "after"), "example 100 after");
+  t.is(printf("hello %s", "world"), "hello world");
+});
+
+test("format - no domain", (t) => {
   t.is(
-    format(undefined, "level", ["example %s", 100, "after"]),
-    "level example 100 after",
+    format(undefined, "info", "hello world", {}),
+    'level=info msg="hello world"',
   );
+  t.is(format(undefined, "info", "simple", {}), "level=info msg=simple");
+});
 
+test("format - with domain", (t) => {
   t.is(
-    format("prefix", "level", ["example %s", 100, "after"]),
-    `level ${yellow("prefix")}: example 100 after`,
+    format("my-service", "info", "hello world", {}),
+    'level=info domain=my-service msg="hello world"',
   );
+});
 
+test("format - with fields", (t) => {
   t.is(
-    format("prefix", "level", ["example %s", 100, { prop: "value" }]),
-    `level ${yellow("prefix")}: example 100 { prop: 'value' }`,
+    format(undefined, "info", "request", { user_id: "abc", status: 200 }),
+    "level=info msg=request user_id=abc status=200",
   );
+  t.is(
+    format(undefined, "info", "request", { flag: true }),
+    "level=info msg=request flag=true",
+  );
+  t.is(
+    format(undefined, "info", "request", { label: "hello world" }),
+    'level=info msg=request label="hello world"',
+  );
+});
 
+test("format - error field", (t) => {
   const err = new Error("message");
-
   err.stack = [
     "Error: message",
     "    at Thing.method (lib/thing.js:21:15)",
   ].join("\n");
 
-  t.is(
-    format("prefix", "level", [err]),
-    `level ${yellow("prefix")}: ${err.stack}`,
-  );
-
-  // Node 12 now logs stack, not just message.
-  // Check startsWith for consistency between versions.
+  const result = format(undefined, "error", "something failed", { error: err });
   t.true(
-    format("prefix", "level", ["example %s", err]).startsWith(
-      `level ${yellow("prefix")}: example Error: message`,
+    result.startsWith(
+      'level=error msg="something failed" error="Error: message',
     ),
+  );
+});
+
+test("format - null/undefined fields are skipped", (t) => {
+  t.is(
+    format(undefined, "info", "msg", { a: null, b: undefined, c: "ok" }),
+    "level=info msg=msg c=ok",
   );
 });

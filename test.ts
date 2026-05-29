@@ -2,10 +2,10 @@ import test from "ava";
 import * as logger from ".";
 
 test("Sanity check", (t) => {
-  t.true(logger.create({ syslog: true }) instanceof logger.LokeLogger);
-  t.true(logger.create() instanceof logger.LokeLogger);
+  t.true(logger.createLogger({ syslog: true }) instanceof logger.LokeLogger);
+  t.true(logger.createLogger() instanceof logger.LokeLogger);
 
-  const debug = logger.create({ showDebug: true });
+  const debug = logger.createLogger({ showDebug: true });
   t.is(debug.showDebug, true);
 });
 
@@ -19,5 +19,5 @@ test("Registers a metric", (t) => {
     },
   };
 
-  logger.create({ metricsRegistry: registry });
+  logger.createLogger({ metricsRegistry: registry });
 });

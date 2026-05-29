@@ -1,12 +1,11 @@
 import { Writable } from "node:stream";
+import type { Log, LogLevel } from "../common";
 
-import { DEBUG, INFO, WARN, ERROR, Log } from "../common";
-
-const SYSTEMD_PREFIX = {
-  [DEBUG]: "<7>",
-  [INFO]: "<6>",
-  [WARN]: "<4>",
-  [ERROR]: "<3>",
+const SYSTEMD_PREFIX: Record<LogLevel, string> = {
+  debug: "<7>",
+  info: "<6>",
+  warn: "<4>",
+  error: "<3>",
 };
 
 export class ConsoleStream extends Writable {
@@ -41,13 +40,10 @@ export class ConsoleStream extends Writable {
       message = message.replace(/\n/g, "\\n");
     }
 
-    switch (level) {
-      case ERROR:
-      case WARN:
-        this.stderr.write(prefix + message + "\n");
-        break;
-      default:
-        this.stdout.write(prefix + message + "\n");
+    if (level === "error" || level === "warn") {
+      this.stderr.write(`${prefix + message}\n`);
+    } else {
+      this.stdout.write(`${prefix + message}\n`);
     }
     callback();
   }

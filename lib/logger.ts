@@ -1,40 +1,29 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { PassThrough } from "stream";
-import { format, DEBUG, INFO, WARN, ERROR } from "./common";
+import { PassThrough } from "node:stream";
+import { format, type LogFields, type LogLevel } from "./common";
 
 const isProd = process.env.NODE_ENV === "production";
 
 export interface LoggerOptions {
   showDebug?: boolean;
-  prefix?: string;
+  domain?: string;
   streams: NodeJS.WritableStream[];
 }
 
-/**
- * Logger is the interface services should depend on, note it does not include
- * withPrefix by design
- */
 export interface Logger {
-  debug(message?: any, ...optionalParams: any[]): void;
-  log(message?: any, ...optionalParams: any[]): void;
-  info(message?: any, ...optionalParams: any[]): void;
-  warn(message?: any, ...optionalParams: any[]): void;
-  error(message?: any, ...optionalParams: any[]): void;
-}
-
-// assert that a plain console logger can be used as a Logger
-{
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _: Logger = console;
+  debug(msg: string, ...fields: LogFields[]): void;
+  log(msg: string, ...fields: LogFields[]): void;
+  info(msg: string, ...fields: LogFields[]): void;
+  warn(msg: string, ...fields: LogFields[]): void;
+  error(msg: string, ...fields: LogFields[]): void;
 }
 
 export class LokeLogger implements Logger {
-  prefix?: string;
+  domain?: string;
   showDebug: boolean;
   private stream: PassThrough;
 
-  constructor({ showDebug = !isProd, prefix, streams }: LoggerOptions) {
-    this.prefix = prefix;
+  constructor({ showDebug = !isProd, domain, streams }: LoggerOptions) {
+    this.domain = domain;
     this.showDebug = showDebug;
     this.stream = new PassThrough({ objectMode: true });
 
@@ -43,40 +32,38 @@ export class LokeLogger implements Logger {
     }
   }
 
-  private _write(level: string, args: any[]) {
-    const message = format(this.prefix, level, args);
+  private _write(level: LogLevel, msg: string, fields: LogFields[]): void {
+    const message = format(
+      this.domain,
+      level,
+      msg,
+      Object.assign({}, ...fields),
+    );
     this.stream.write({ level, message });
   }
 
-  debug(...args: any[]): void {
-    if (!this.showDebug) {
-      return;
-    }
-    this._write(DEBUG, args);
+  debug(msg: string, ...fields: LogFields[]): void {
+    if (!this.showDebug) return;
+    this._write("debug", msg, fields);
   }
 
-  log(...args: any[]): void {
-    this._write(INFO, args);
+  log(msg: string, ...fields: LogFields[]): void {
+    this._write("info", msg, fields);
   }
 
-  info(...args: any[]): void {
-    this._write(INFO, args);
+  info(msg: string, ...fields: LogFields[]): void {
+    this._write("info", msg, fields);
   }
 
-  warn(...args: any[]): void {
-    this._write(WARN, args);
+  warn(msg: string, ...fields: LogFields[]): void {
+    this._write("warn", msg, fields);
   }
 
-  error(...args: any[]): void {
-    this._write(ERROR, args);
+  error(msg: string, ...fields: LogFields[]): void {
+    this._write("error", msg, fields);
   }
 
-  withPrefix(prefix: string): LokeLogger {
-    return Object.assign(Object.create(this), { prefix });
-  }
-
-  // NOTE: not yet useful, but might make migrating easier
-  withContext(ctx: unknown): LokeLogger {
-    return Object.assign(Object.create(this), { ctx });
+  withDomain(domain: string): LokeLogger {
+    return Object.assign(Object.create(this), { domain });
   }
 }

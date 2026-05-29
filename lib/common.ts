@@ -1,23 +1,48 @@
 import util from "node:util";
-import { cyan, blue, yellow, red } from "chalk";
 
-const formatPrefix = (prefix?: string) => (prefix ? yellow(prefix) + ": " : "");
+export type LogLevel = "debug" | "info" | "warn" | "error";
+export type LogFields = Record<string, unknown>;
 
 export interface Log {
-  level: string;
+  level: LogLevel;
   message: string;
 }
 
-export const DEBUG = cyan("DEBG");
-export const INFO = blue("INFO");
-export const WARN = yellow("WARN");
-export const ERROR = red("ERRO");
+function quoteValue(value: string): string {
+  if (/[\s"=]/.test(value)) {
+    return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  }
+  return value;
+}
+
+function formatValue(value: unknown): string {
+  if (value instanceof Error) return quoteValue(value.stack ?? String(value));
+  if (typeof value === "string") return quoteValue(value);
+  if (typeof value === "number" || typeof value === "boolean")
+    return String(value);
+  return quoteValue(JSON.stringify(value));
+}
+
+export function printf(fmt: string, ...args: unknown[]): string {
+  return util.format(fmt, ...args);
+}
 
 export function format(
-  prefix: string | undefined,
-  level: string,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
-  args: any,
+  domain: string | undefined,
+  level: LogLevel,
+  msg: string,
+  fields: LogFields,
 ): string {
-  return level + " " + formatPrefix(prefix) + util.format.apply(null, args);
+  const fieldParts = Object.entries(fields)
+    .filter(([, v]) => v !== null && v !== undefined)
+    .map(([k, v]) => `${k}=${formatValue(v)}`);
+
+  return [
+    `level=${level}`,
+    domain && `domain=${domain}`,
+    `msg=${quoteValue(msg)}`,
+    ...fieldParts,
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
