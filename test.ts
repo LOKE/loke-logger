@@ -21,3 +21,13 @@ test("Registers a metric", (t) => {
 
   logger.createLogger({ metricsRegistry: registry });
 });
+
+test("null logger accepts every log level", (t) => {
+  t.notThrows(() => {
+    logger.nullLogger.debug("debug");
+    logger.nullLogger.log("log");
+    logger.nullLogger.info("info");
+    logger.nullLogger.warn("warn");
+    logger.nullLogger.error("error");
+  });
+});

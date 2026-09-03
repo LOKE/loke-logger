@@ -74,19 +74,12 @@ Default: `false`
 
 Adds syslog UDP output alongside console output.
 
-### `systemdPrefix`
-
-Type: `boolean`
-Default: `true` when `JOURNAL_STREAM` is set, otherwise `false`
-
-Prefixes lines with systemd journal severity codes (e.g. `<6>`) so the journal assigns the correct priority.
-
 ### `escapeNewlines`
 
 Type: `boolean`
-Default: `true` when `JOURNAL_STREAM` or `KUBERNETES_SERVICE_HOST` is set, otherwise `false`
+Default: `true` when `KUBERNETES_SERVICE_HOST` is set, otherwise `false`
 
-Replaces literal newlines in log output with `\n` so each log entry stays on a single line. Useful for Kubernetes and systemd where multi-line log entries may not parse correctly.
+Replaces literal newlines in log output with `\n` so each log entry stays on a single line. Useful for Kubernetes where multi-line log entries may not parse correctly.
 
 ### `metricsRegistry`
 

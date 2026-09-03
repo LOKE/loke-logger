@@ -7,7 +7,7 @@
 **Output format changed to logfmt.** Every log line is now structured key=value pairs:
 
 ```
-level=info domain=my-service msg="user signed in" user_id=42
+level=info domain=my-service msg="user signed in" user=42
 ```
 
 Previously output was a freeform string like `[my-service] user signed in`.
@@ -31,7 +31,7 @@ const logger = createLogger();
 logger.info("user %s signed in", userId);
 
 // after
-logger.info("user signed in", { user_id: userId });
+logger.info("user signed in", { user: userId });
 logger.info("request failed", { status: 500 }, { error: new Error("timeout") });
 
 // for printf-style message formatting, use the exported printf helper
@@ -48,6 +48,8 @@ const log = logger.withPrefix("my-service");
 // after
 const log = logger.withDomain("my-service");
 ```
+
+**Systemd support removed.** `systemdPrefix` and `JOURNAL_STREAM` detection are gone. Kubernetes still enables newline escaping automatically through `KUBERNETES_SERVICE_HOST`.
 
 **`LogFields` is `Record<string, unknown>`.** The old variadic `any[]` signature is gone — structured fields are fully typed. `null` and `undefined` values are silently omitted from output.
 

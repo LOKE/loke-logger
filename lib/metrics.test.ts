@@ -47,3 +47,51 @@ test("domain passes through", (t) => {
   logger.withDomain("other-service").log("domain message");
   t.snapshot(lastWrite);
 });
+
+test("suppressed debug logs are not counted", async (t) => {
+  const registry = new Registry();
+  const stream = new Writable({
+    objectMode: true,
+    write(chunk, encoding, callback) {
+      callback();
+    },
+  });
+  const logger = metricsMiddleware(registry)(
+    new LokeLogger({
+      streams: [stream],
+      showDebug: false,
+    }),
+  );
+
+  logger.withDomain("suppressed-debug").debug("not emitted");
+
+  t.notRegex(await registry.metrics(), /domain="suppressed-debug"/);
+});
+
+test("metrics are isolated by registry", async (t) => {
+  const registryA = new Registry();
+  const registryB = new Registry();
+  const stream = new Writable({
+    objectMode: true,
+    write(chunk, encoding, callback) {
+      callback();
+    },
+  });
+  const loggerA = metricsMiddleware(registryA)(
+    new LokeLogger({ streams: [stream], domain: "service-a" }),
+  );
+
+  metricsMiddleware(registryB);
+  loggerA.error("failure");
+
+  t.regex(await registryA.metrics(), /severity="error",domain="service-a"} 1/);
+  t.notRegex(await registryB.metrics(), /domain="service-a"/);
+});
+
+test("duplicate middleware registration remains accepted", (t) => {
+  const registry = new Registry();
+
+  metricsMiddleware(registry);
+
+  t.notThrows(() => metricsMiddleware(registry));
+});

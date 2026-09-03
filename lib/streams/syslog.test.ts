@@ -82,10 +82,10 @@ test("with fields", async (t) => {
   });
   const logger = new LokeLogger({ showDebug: true, streams: [syslog] });
 
-  logger.info("request", { user_id: "abc", status: 200 });
+  logger.info("request", { user: "abc", status: 200 });
   t.is(
     await next(),
-    "<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - level=info msg=request user_id=abc status=200",
+    "<134>1 2018-02-23T11:46:24.00Z ip-10-0-0-115 test 2607 - - level=info msg=request user=abc status=200",
   );
 
   syslog.close();
