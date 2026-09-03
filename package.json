@@ -5,10 +5,13 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/test.*",
+    "!dist/**/*.map"
   ],
   "scripts": {
-    "test": "ava -v --timeout=30s",
+    "test": "npm run build && ava -v --timeout=30s 'dist/**/*.test.js' dist/test.js",
     "posttest": "npm run lint",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
@@ -28,14 +31,6 @@
     "url": "https://github.com/LOKE/loke-logger/issues"
   },
   "homepage": "https://github.com/LOKE/loke-logger#readme",
-  "ava": {
-    "extensions": [
-      "ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ]
-  },
   "dependencies": {
     "glossy": "^0.1.7"
   },
@@ -46,13 +41,12 @@
     "@types/node": "^24.12.4",
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
-    "ava": "^6.1.3",
+    "ava": "^8.0.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-ava": "^14.0.0",
     "prettier": "^3.3.3",
     "prom-client": "^15.1.3",
-    "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   }
 }

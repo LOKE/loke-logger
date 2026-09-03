@@ -7,20 +7,30 @@ type Middleware = (next: LokeLogger) => LokeLogger;
 const wrap = (next: LokeLogger, wrapper: Partial<LokeLogger>): LokeLogger =>
   Object.assign(Object.create(next), wrapper);
 
-const logCounter = new Counter({
-  name: "log_messages_total",
-  help: "Total count of log messages",
-  labelNames: ["domain", "severity"],
-  registers: [],
-});
+const logCounters = new WeakMap<Registry, Counter>();
 
 export function metricsMiddleware(registry: Registry): Middleware {
+  let logCounter = logCounters.get(registry);
+  if (!logCounter) {
+    logCounter = new Counter({
+      name: "log_messages_total",
+      help: "Total count of log messages",
+      labelNames: ["domain", "severity"],
+      registers: [],
+    });
+    logCounters.set(registry, logCounter);
+  }
   registry.registerMetric(logCounter);
 
   return (next: LokeLogger) => {
     return wrap(next, {
       debug(msg: string, ...fields: LogFields[]) {
-        logCounter.inc({ severity: "debug", domain: this.domain || "<NONE>" });
+        if (this.showDebug) {
+          logCounter.inc({
+            severity: "debug",
+            domain: this.domain || "<NONE>",
+          });
+        }
         return next.debug.call(this, msg, ...fields);
       },
       log(msg: string, ...fields: LogFields[]) {

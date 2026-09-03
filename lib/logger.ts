@@ -17,6 +17,40 @@ export interface Logger {
   error(msg: string, ...fields: LogFields[]): void;
 }
 
+function mergeFields(fieldGroups: LogFields[]): LogFields {
+  const merged: LogFields = {};
+
+  for (const fields of fieldGroups) {
+    let keys: (string | symbol)[];
+
+    try {
+      keys = Reflect.ownKeys(fields);
+    } catch {
+      continue;
+    }
+
+    for (const key of keys) {
+      if (typeof key !== "string") continue;
+
+      try {
+        const descriptor = Reflect.getOwnPropertyDescriptor(fields, key);
+        if (!descriptor?.enumerable || !("value" in descriptor)) continue;
+
+        Object.defineProperty(merged, key, {
+          configurable: true,
+          enumerable: true,
+          value: descriptor.value,
+          writable: true,
+        });
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  return merged;
+}
+
 export class LokeLogger implements Logger {
   domain?: string;
   showDebug: boolean;
@@ -33,12 +67,7 @@ export class LokeLogger implements Logger {
   }
 
   private _write(level: LogLevel, msg: string, fields: LogFields[]): void {
-    const message = format(
-      this.domain,
-      level,
-      msg,
-      Object.assign({}, ...fields),
-    );
+    const message = format(this.domain, level, msg, mergeFields(fields));
     this.stream.write({ level, message });
   }
 
