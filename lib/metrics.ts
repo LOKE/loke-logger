@@ -1,45 +1,53 @@
-import { Counter, Registry } from "prom-client";
-import chalk from "chalk";
-import { LokeLogger } from "./logger";
-
-chalk.level = 0;
+import { Counter, type Registry } from "prom-client";
+import type { LogFields } from "./common";
+import type { LokeLogger } from "./logger";
 
 type Middleware = (next: LokeLogger) => LokeLogger;
 
 const wrap = (next: LokeLogger, wrapper: Partial<LokeLogger>): LokeLogger =>
   Object.assign(Object.create(next), wrapper);
 
-const logCounter = new Counter({
-  name: "log_messages_total",
-  help: "Total count of log messages",
-  labelNames: ["prefix", "severity"],
-  registers: [],
-});
+const logCounters = new WeakMap<Registry, Counter>();
 
 export function metricsMiddleware(registry: Registry): Middleware {
+  let logCounter = logCounters.get(registry);
+  if (!logCounter) {
+    logCounter = new Counter({
+      name: "log_messages_total",
+      help: "Total count of log messages",
+      labelNames: ["domain", "severity"],
+      registers: [],
+    });
+    logCounters.set(registry, logCounter);
+  }
   registry.registerMetric(logCounter);
 
   return (next: LokeLogger) => {
     return wrap(next, {
-      debug(...args) {
-        logCounter.inc({ severity: "debug", prefix: this.prefix || "<NONE>" });
-        return next.debug.apply(this, args);
+      debug(msg: string, ...fields: LogFields[]) {
+        if (this.showDebug) {
+          logCounter.inc({
+            severity: "debug",
+            domain: this.domain || "<NONE>",
+          });
+        }
+        return next.debug.call(this, msg, ...fields);
       },
-      log(...args) {
-        logCounter.inc({ severity: "info", prefix: this.prefix || "<NONE>" });
-        return next.log.apply(this, args);
+      log(msg: string, ...fields: LogFields[]) {
+        logCounter.inc({ severity: "info", domain: this.domain || "<NONE>" });
+        return next.log.call(this, msg, ...fields);
       },
-      info(...args) {
-        logCounter.inc({ severity: "info", prefix: this.prefix || "<NONE>" });
-        return next.info.apply(this, args);
+      info(msg: string, ...fields: LogFields[]) {
+        logCounter.inc({ severity: "info", domain: this.domain || "<NONE>" });
+        return next.info.call(this, msg, ...fields);
       },
-      warn(...args) {
-        logCounter.inc({ severity: "warn", prefix: this.prefix || "<NONE>" });
-        return next.warn.apply(this, args);
+      warn(msg: string, ...fields: LogFields[]) {
+        logCounter.inc({ severity: "warn", domain: this.domain || "<NONE>" });
+        return next.warn.call(this, msg, ...fields);
       },
-      error(...args) {
-        logCounter.inc({ severity: "error", prefix: this.prefix || "<NONE>" });
-        return next.error.apply(this, args);
+      error(msg: string, ...fields: LogFields[]) {
+        logCounter.inc({ severity: "error", domain: this.domain || "<NONE>" });
+        return next.error.call(this, msg, ...fields);
       },
     });
   };
