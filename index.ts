@@ -12,22 +12,16 @@ export interface CreateLoggerOptions {
   syslog?: boolean;
   metricsRegistry?: MetricsRegistry;
   showDebug?: boolean;
-  escapeNewlines?: boolean;
   domain?: string;
 }
-
-const kubernetes = Boolean(process.env.KUBERNETES_SERVICE_HOST);
 
 export function createLogger({
   syslog = false,
   metricsRegistry,
   showDebug,
-  escapeNewlines = kubernetes,
   domain,
 }: CreateLoggerOptions = {}): LokeLogger {
-  const streams: NodeJS.WritableStream[] = [
-    new ConsoleStream(undefined, undefined, escapeNewlines),
-  ];
+  const streams: NodeJS.WritableStream[] = [new ConsoleStream()];
 
   if (syslog) {
     streams.push(new SyslogStream());

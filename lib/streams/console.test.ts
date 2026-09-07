@@ -138,38 +138,6 @@ test("with domain", async (t) => {
   t.is(await written, 'level=info domain=my-service msg="domain message"\n');
 });
 
-test("logger newline escaping", async (t) => {
-  const stdout = createTestWritable();
-  const stderr = createTestWritable();
-  const logger = new LokeLogger({
-    streams: [new ConsoleStream(stdout.writable, stderr.writable, true)],
-  });
-
-  let written = stdout.nextWrite();
-  logger.debug("debug message");
-  t.is(await written, 'level=debug msg="debug message"\n');
-
-  written = stdout.nextWrite();
-  logger.log("log message");
-  t.is(await written, 'level=info msg="log message"\n');
-
-  written = stdout.nextWrite();
-  logger.info("info message");
-  t.is(await written, 'level=info msg="info message"\n');
-
-  written = stderr.nextWrite();
-  logger.warn("warn message");
-  t.is(await written, 'level=warn msg="warn message"\n');
-
-  written = stderr.nextWrite();
-  logger.error("error message");
-  t.is(await written, 'level=error msg="error message"\n');
-
-  written = stdout.nextWrite();
-  logger.log("multiline\nmessage");
-  t.is(await written, 'level=info msg="multiline\\nmessage"\n');
-});
-
 test("waits for the selected destination to finish writing", async (t) => {
   const controlledStdout = createControlledWritable();
   const unusedStderr = createTestWritable();

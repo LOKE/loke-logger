@@ -23,15 +23,10 @@ function handleDefaultDestinationErrors(stream: NodeJS.WritableStream): void {
 export class ConsoleStream extends Writable {
   stdout: NodeJS.WritableStream;
   stderr: NodeJS.WritableStream;
-  escapeNewlines: boolean;
   private readonly defaultStdout: boolean;
   private readonly defaultStderr: boolean;
 
-  constructor(
-    stdout?: NodeJS.WritableStream,
-    stderr?: NodeJS.WritableStream,
-    escapeNewlines = false,
-  ) {
+  constructor(stdout?: NodeJS.WritableStream, stderr?: NodeJS.WritableStream) {
     super({ objectMode: true });
     this.defaultStdout = stdout === undefined;
     this.defaultStderr = stderr === undefined;
@@ -39,16 +34,10 @@ export class ConsoleStream extends Writable {
     this.stderr = stderr ?? process.stderr;
     if (this.defaultStdout) handleDefaultDestinationErrors(this.stdout);
     if (this.defaultStderr) handleDefaultDestinationErrors(this.stderr);
-    this.escapeNewlines = escapeNewlines;
   }
 
   _write(log: Log, _: string, callback: (error?: Error | null) => void): void {
-    const { level } = log;
-    let message = log.message;
-
-    if (this.escapeNewlines) {
-      message = message.replace(/\n/g, "\\n");
-    }
+    const { level, message } = log;
 
     const destination =
       level === "error" || level === "warn" ? this.stderr : this.stdout;
