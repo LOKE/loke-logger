@@ -1,54 +1,70 @@
 import { Writable } from "node:stream";
+import type { Log } from "../common";
 
-import { DEBUG, INFO, WARN, ERROR, Log } from "../common";
+const handledDefaultDestinations = new WeakSet<NodeJS.WritableStream>();
 
-const SYSTEMD_PREFIX = {
-  [DEBUG]: "<7>",
-  [INFO]: "<6>",
-  [WARN]: "<4>",
-  [ERROR]: "<3>",
-};
+function isEpipe(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "EPIPE"
+  );
+}
+
+function handleDefaultDestinationErrors(stream: NodeJS.WritableStream): void {
+  if (handledDefaultDestinations.has(stream)) return;
+  stream.on("error", (error: unknown) => {
+    if (!isEpipe(error)) throw error;
+  });
+  handledDefaultDestinations.add(stream);
+}
 
 export class ConsoleStream extends Writable {
   stdout: NodeJS.WritableStream;
   stderr: NodeJS.WritableStream;
-  systemdPrefix: boolean;
-  escapeNewlines: boolean;
+  pretty: boolean;
+  private readonly defaultStdout: boolean;
+  private readonly defaultStderr: boolean;
 
   constructor(
-    stdout: NodeJS.WritableStream = process.stdout,
-    stderr: NodeJS.WritableStream = process.stderr,
-    systemdPrefix = false,
-    escapeNewlines = false,
+    stdout?: NodeJS.WritableStream,
+    stderr?: NodeJS.WritableStream,
+    pretty = false,
   ) {
     super({ objectMode: true });
-    this.stdout = stdout;
-    this.stderr = stderr;
-    this.systemdPrefix = systemdPrefix;
-    this.escapeNewlines = escapeNewlines;
+    this.defaultStdout = stdout === undefined;
+    this.defaultStderr = stderr === undefined;
+    this.stdout = stdout ?? process.stdout;
+    this.stderr = stderr ?? process.stderr;
+    if (this.defaultStdout) handleDefaultDestinationErrors(this.stdout);
+    if (this.defaultStderr) handleDefaultDestinationErrors(this.stderr);
+    this.pretty = pretty;
   }
 
-  _write(log: Log, _: string, callback: () => void): void {
+  _write(log: Log, _: string, callback: (error?: Error | null) => void): void {
     const { level } = log;
-    let message = log.message;
+    // Undoes logfmt escaping wholesale, so a literal "\n" in text expands too.
+    const message = this.pretty
+      ? log.message.replace(/\\n/g, "\n")
+      : log.message;
 
-    let prefix = "";
-    if (this.systemdPrefix) {
-      prefix = SYSTEMD_PREFIX[level];
-    }
-
-    if (this.escapeNewlines) {
-      message = message.replace(/\n/g, "\\n");
-    }
-
-    switch (level) {
-      case ERROR:
-      case WARN:
-        this.stderr.write(prefix + message + "\n");
-        break;
-      default:
-        this.stdout.write(prefix + message + "\n");
-    }
-    callback();
+    const destination =
+      level === "error" || level === "warn" ? this.stderr : this.stdout;
+    const suppressEpipe =
+      level === "error" || level === "warn"
+        ? this.defaultStderr
+        : this.defaultStdout;
+    let completed = false;
+    const complete = (error?: Error | null): void => {
+      const failure = suppressEpipe && isEpipe(error) ? undefined : error;
+      if (completed) {
+        if (failure) this.destroy(failure);
+        return;
+      }
+      completed = true;
+      callback(failure);
+    };
+    if (destination.write(`${message}\n`, complete)) complete();
   }
 }

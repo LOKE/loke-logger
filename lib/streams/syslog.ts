@@ -1,18 +1,10 @@
-import os from "node:os";
 import dgram from "node:dgram";
+import os from "node:os";
 import { Writable } from "node:stream";
 import glossy from "glossy";
-
-import { DEBUG, INFO, WARN, ERROR, Log } from "../common";
+import type { Log } from "../common";
 
 export const mockable = { Date };
-
-const SYSLOG_LEVELS = new Map([
-  [DEBUG, "debug"],
-  [INFO, "info"],
-  [WARN, "warning"],
-  [ERROR, "error"],
-]);
 
 interface SyslogStreamOptions {
   host?: string;
@@ -56,7 +48,7 @@ export class SyslogStream extends Writable {
     const { level, message } = log;
 
     const syslogMsg: string = this.producer.produce({
-      severity: SYSLOG_LEVELS.get(level),
+      severity: level === "warn" ? "warning" : level,
       date: new mockable.Date(),
       message,
     });
