@@ -1,8 +1,13 @@
 import test from "ava";
-import { Registry } from "prom-client";
+import { Counter, Registry } from "prom-client";
+import {
+  Counter as PrometheusIoCounter,
+  Registry as PrometheusIoRegistry,
+} from "@prometheus-io/client";
 import { metricsMiddleware } from "./metrics";
 import { LokeLogger } from "./logger";
 import { Writable } from "stream";
+import { spawnSync } from "node:child_process";
 
 test("logger metrics", async (t) => {
   const registry = new Registry();
@@ -94,4 +99,111 @@ test("duplicate middleware registration remains accepted", (t) => {
   metricsMiddleware(registry);
 
   t.notThrows(() => metricsMiddleware(registry));
+});
+
+test("works with a @prometheus-io/client registry", async (t) => {
+  const registry = new PrometheusIoRegistry();
+  const stream = new Writable({
+    objectMode: true,
+    write(chunk, encoding, callback) {
+      callback();
+    },
+  });
+  const logger = metricsMiddleware(registry)(
+    new LokeLogger({ streams: [stream], domain: "successor" }),
+  );
+
+  logger.error("failure");
+
+  t.regex(await registry.metrics(), /severity="error",domain="successor"} 1/);
+});
+
+test("the counter comes from the same package as the registry", (t) => {
+  const promClient = new Registry();
+  const prometheusIo = new PrometheusIoRegistry();
+
+  metricsMiddleware(promClient);
+  metricsMiddleware(prometheusIo);
+
+  t.true(promClient.getSingleMetric("log_messages_total") instanceof Counter);
+  t.true(
+    prometheusIo.getSingleMetric("log_messages_total") instanceof
+      PrometheusIoCounter,
+  );
+});
+
+test("matching a registry does not load the unused peer", (t) => {
+  const script = `
+    const { Registry } = require("@prometheus-io/client");
+    const { metricsMiddleware } = require("./dist/lib/metrics");
+    const Module = require("node:module");
+    const load = Module._load;
+    Module._load = function (name, ...args) {
+      if (name === "prom-client") throw new Error("unused peer loaded");
+      return load.call(this, name, ...args);
+    };
+    metricsMiddleware(new Registry());
+  `;
+  const result = spawnSync(process.execPath, ["-e", script], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+
+  t.is(result.status, 0, result.stderr);
+});
+
+test("missing transitive peer dependencies are not silently ignored", (t) => {
+  const script = `
+    const assert = require("node:assert/strict");
+    const { Registry } = require("prom-client");
+    const { metricsMiddleware } = require("./dist/lib/metrics");
+    const Module = require("node:module");
+    const load = Module._load;
+    const failure = Object.assign(new Error("Cannot find module 'dependency'"), {
+      code: "MODULE_NOT_FOUND",
+    });
+    Module._load = function (name, ...args) {
+      if (name === "@prometheus-io/client") throw failure;
+      return load.call(this, name, ...args);
+    };
+    assert.throws(() => metricsMiddleware(new Registry()), (err) => err === failure);
+  `;
+  const result = spawnSync(process.execPath, ["-e", script], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+
+  t.is(result.status, 0, result.stderr);
+});
+
+test("missing optional peers are skipped and absence of both is reported", (t) => {
+  const script = `
+    const assert = require("node:assert/strict");
+    const { Counter, Registry } = require("prom-client");
+    const { metricsMiddleware } = require("./dist/lib/metrics");
+    const Module = require("node:module");
+    const resolve = Module._resolveFilename;
+    const missing = new Set(["@prometheus-io/client"]);
+    Module._resolveFilename = function (name, ...args) {
+      if (missing.has(name)) {
+        throw Object.assign(new Error("Cannot find module '" + name + "'"), {
+          code: "MODULE_NOT_FOUND",
+        });
+      }
+      return resolve.call(this, name, ...args);
+    };
+    const registry = new Registry();
+    metricsMiddleware(registry);
+    assert.ok(registry.getSingleMetric("log_messages_total") instanceof Counter);
+    missing.add("prom-client");
+    assert.throws(() => metricsMiddleware(new Registry()), {
+      message: "metricsRegistry requires one of @prometheus-io/client or prom-client to be installed",
+    });
+  `;
+  const result = spawnSync(process.execPath, ["-e", script], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+
+  t.is(result.status, 0, result.stderr);
 });

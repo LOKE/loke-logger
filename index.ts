@@ -1,16 +1,16 @@
-import type { Registry } from "prom-client";
 import { LokeLogger } from "./lib/logger";
-import { metricsMiddleware } from "./lib/metrics";
+import { metricsMiddleware, type MetricsRegistry } from "./lib/metrics";
 import { ConsoleStream, SyslogStream } from "./lib/streams";
 
 export { LogFields, printf } from "./lib/common";
 export { Logger, LokeLogger } from "./lib/logger";
+export { MetricsRegistry } from "./lib/metrics";
 export { nullLogger } from "./lib/null";
 export { ConsoleStream, SyslogStream } from "./lib/streams";
 
 export interface CreateLoggerOptions {
   syslog?: boolean;
-  metricsRegistry?: Registry;
+  metricsRegistry?: MetricsRegistry;
   showDebug?: boolean;
   escapeNewlines?: boolean;
   domain?: string;
