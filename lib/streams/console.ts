@@ -20,17 +20,25 @@ function handleDefaultDestinationErrors(stream: NodeJS.WritableStream): void {
   handledDefaultDestinations.add(stream);
 }
 
+function expandNewlines(message: string): string {
+  let quoted = false;
+  return message.replace(/\\.|"/g, (token) => {
+    if (token === '"') quoted = !quoted;
+    return quoted && token === "\\n" ? "\n" : token;
+  });
+}
+
 export class ConsoleStream extends Writable {
   stdout: NodeJS.WritableStream;
   stderr: NodeJS.WritableStream;
-  escapeNewlines: boolean;
+  pretty: boolean;
   private readonly defaultStdout: boolean;
   private readonly defaultStderr: boolean;
 
   constructor(
     stdout?: NodeJS.WritableStream,
     stderr?: NodeJS.WritableStream,
-    escapeNewlines = false,
+    pretty = false,
   ) {
     super({ objectMode: true });
     this.defaultStdout = stdout === undefined;
@@ -39,16 +47,12 @@ export class ConsoleStream extends Writable {
     this.stderr = stderr ?? process.stderr;
     if (this.defaultStdout) handleDefaultDestinationErrors(this.stdout);
     if (this.defaultStderr) handleDefaultDestinationErrors(this.stderr);
-    this.escapeNewlines = escapeNewlines;
+    this.pretty = pretty;
   }
 
   _write(log: Log, _: string, callback: (error?: Error | null) => void): void {
     const { level } = log;
-    let message = log.message;
-
-    if (this.escapeNewlines) {
-      message = message.replace(/\n/g, "\\n");
-    }
+    const message = this.pretty ? expandNewlines(log.message) : log.message;
 
     const destination =
       level === "error" || level === "warn" ? this.stderr : this.stdout;
