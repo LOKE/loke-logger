@@ -8,25 +8,25 @@ export { MetricsRegistry } from "./lib/metrics";
 export { nullLogger } from "./lib/null";
 export { ConsoleStream, SyslogStream } from "./lib/streams";
 
+const kubernetes = Boolean(process.env.KUBERNETES_SERVICE_HOST);
+
 export interface CreateLoggerOptions {
   syslog?: boolean;
+  pretty?: boolean;
   metricsRegistry?: MetricsRegistry;
   showDebug?: boolean;
-  escapeNewlines?: boolean;
   domain?: string;
 }
-
-const kubernetes = Boolean(process.env.KUBERNETES_SERVICE_HOST);
 
 export function createLogger({
   syslog = false,
   metricsRegistry,
   showDebug,
-  escapeNewlines = kubernetes,
   domain,
+  pretty = !kubernetes,
 }: CreateLoggerOptions = {}): LokeLogger {
   const streams: NodeJS.WritableStream[] = [
-    new ConsoleStream(undefined, undefined, escapeNewlines),
+    new ConsoleStream(undefined, undefined, pretty),
   ];
 
   if (syslog) {

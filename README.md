@@ -30,6 +30,10 @@ logger.error(
 );
 ```
 
+Structured field objects merge from left to right. Later values win; null and undefined values, getters, invalid keys, and the reserved keys `level`, `domain`, and `msg` are omitted.
+
+Logging methods return immediately. Slow outputs buffer pending logs in memory; there is no queue limit or automatic dropping.
+
 ### Scoped loggers
 
 Use `withDomain` to create a child logger that adds `domain=<name>` to every line:
@@ -72,14 +76,17 @@ Sets a `domain=` field on every log line from this logger instance.
 Type: `boolean`
 Default: `false`
 
-Adds syslog UDP output alongside console output.
+Adds RFC5424 syslog over UDP alongside console output, with UTC timestamps and the RFC5424 UTF-8 marker before each message.
 
-### `escapeNewlines`
+When using `SyslogStream` directly, `end()` or `close()` drains pending sends before closing its socket. An injected socket remains owned by the caller. Send failures are emitted as stream errors.
+
+### `pretty`
 
 Type: `boolean`
-Default: `true` when `KUBERNETES_SERVICE_HOST` is set, otherwise `false`
 
-Replaces literal newlines in log output with `\n` so each log entry stays on a single line. Useful for Kubernetes where multi-line log entries may not parse correctly.
+Default: `false` when `KUBERNETES_SERVICE_HOST` is set, otherwise `true`
+
+Expands newline escapes inside quoted logfmt values, so error stacks are readable in local development. Literal `\n` text stays escaped. Log entries may span multiple lines, which is why pretty output is off under Kubernetes.
 
 ### `metricsRegistry`
 

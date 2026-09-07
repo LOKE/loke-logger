@@ -138,38 +138,6 @@ test("with domain", async (t) => {
   t.is(await written, 'level=info domain=my-service msg="domain message"\n');
 });
 
-test("logger newline escaping", async (t) => {
-  const stdout = createTestWritable();
-  const stderr = createTestWritable();
-  const logger = new LokeLogger({
-    streams: [new ConsoleStream(stdout.writable, stderr.writable, true)],
-  });
-
-  let written = stdout.nextWrite();
-  logger.debug("debug message");
-  t.is(await written, 'level=debug msg="debug message"\n');
-
-  written = stdout.nextWrite();
-  logger.log("log message");
-  t.is(await written, 'level=info msg="log message"\n');
-
-  written = stdout.nextWrite();
-  logger.info("info message");
-  t.is(await written, 'level=info msg="info message"\n');
-
-  written = stderr.nextWrite();
-  logger.warn("warn message");
-  t.is(await written, 'level=warn msg="warn message"\n');
-
-  written = stderr.nextWrite();
-  logger.error("error message");
-  t.is(await written, 'level=error msg="error message"\n');
-
-  written = stdout.nextWrite();
-  logger.log("multiline\nmessage");
-  t.is(await written, 'level=info msg="multiline\\nmessage"\n');
-});
-
 test("waits for the selected destination to finish writing", async (t) => {
   const controlledStdout = createControlledWritable();
   const unusedStderr = createTestWritable();
@@ -385,4 +353,68 @@ test("does not suppress EPIPE errors from an injected destination", async (t) =>
   t.is(await writeError, epipe);
   t.is(await observedDestinationError, epipe);
   t.is(await observedStreamError, epipe);
+});
+
+test("pretty expands escaped newlines, plain output keeps them escaped", async (t) => {
+  const stack = 'level=error msg="failed" error="Error: boom\\n    at handler"';
+  const plain = createTestWritable();
+  const pretty = createTestWritable();
+  const plainStream = new ConsoleStream(plain.writable, plain.writable);
+  const prettyStream = new ConsoleStream(
+    pretty.writable,
+    pretty.writable,
+    true,
+  );
+
+  const plainWritten = plain.nextWrite();
+  plainStream.write({ level: "error", message: stack });
+  t.is(await plainWritten, `${stack}\n`);
+
+  const prettyWritten = pretty.nextWrite();
+  prettyStream.write({ level: "error", message: stack });
+  t.is(
+    await prettyWritten,
+    'level=error msg="failed" error="Error: boom\n    at handler"\n',
+  );
+});
+
+test("createLogger prints pretty locally and escaped under kubernetes", (t) => {
+  const script = `
+    const { createLogger } = require("./dist");
+    createLogger().error("failed", { error: Object.assign(new Error("boom"), { stack: "Error: boom\\n    at handler" }) });
+  `;
+  const run = (env: NodeJS.ProcessEnv) =>
+    spawnSync(process.execPath, ["-e", script], {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      env: { ...process.env, ...env },
+    }).stderr;
+
+  t.is(
+    run({ KUBERNETES_SERVICE_HOST: "" }),
+    'level=error msg=failed error="Error: boom\n    at handler"\n',
+  );
+  t.is(
+    run({ KUBERNETES_SERVICE_HOST: "10.0.0.1" }),
+    'level=error msg=failed error="Error: boom\\n    at handler"\n',
+  );
+});
+
+test("pretty preserves literal backslash-n in quoted and unquoted values", (t) => {
+  const destination = createTestWritable();
+  const logger = new LokeLogger({
+    streams: [
+      new ConsoleStream(destination.writable, destination.writable, true),
+    ],
+  });
+
+  logger.info(String.raw`C:\new`);
+  logger.info(String.raw`file C:\new`, { path: String.raw`C:\notes` });
+  logger.info("first\\\nsecond");
+
+  t.deepEqual(destination.data, [
+    String.raw`level=info msg=C:\new` + "\n",
+    String.raw`level=info msg="file C:\\new" path=C:\notes` + "\n",
+    'level=info msg="first\\\\\nsecond"\n',
+  ]);
 });
