@@ -70,3 +70,16 @@ test("logging keeps readable fields when a Proxy descriptor trap throws", (t) =>
   t.notThrows(() => logger.info("message", fields));
   t.is(messages[0]?.message, "level=info msg=message safe=kept");
 });
+
+test("withDomain does not mutate the logger it derives from", (t) => {
+  const { stream, messages } = captureMessages();
+  const logger = new LokeLogger({ streams: [stream], domain: "base" });
+
+  const derived = logger.withDomain("derived");
+  derived.info("from derived");
+  logger.info("from base");
+
+  t.is(logger.domain, "base");
+  t.is(messages[0]?.message, 'level=info domain=derived msg="from derived"');
+  t.is(messages[1]?.message, 'level=info domain=base msg="from base"');
+});

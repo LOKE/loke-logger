@@ -333,3 +333,56 @@ test("repeated createLogger calls reuse process error handlers", (t) => {
 
   t.is(result.status, 0, result.stderr);
 });
+
+test("absorbs EPIPE errors emitted by the console destination", (t) => {
+  const script = `
+    const { createLogger } = require("./dist");
+    createLogger();
+    process.stdout.emit("error", Object.assign(new Error("broken pipe"), { code: "EPIPE" }));
+  `;
+
+  const result = spawnSync(process.execPath, ["-e", script], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+
+  t.is(result.status, 0, result.stderr);
+});
+
+test("rethrows non-EPIPE errors emitted by the console destination", (t) => {
+  const script = `
+    const { createLogger } = require("./dist");
+    createLogger();
+    process.stdout.emit("error", Object.assign(new Error("permission denied"), { code: "EACCES" }));
+  `;
+
+  const result = spawnSync(process.execPath, ["-e", script], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+
+  t.not(result.status, 0);
+  t.regex(result.stderr, /permission denied/);
+});
+
+test("does not suppress EPIPE errors from an injected destination", async (t) => {
+  const destination = createControlledWritable();
+  const unusedStderr = createTestWritable();
+  const stream = new ConsoleStream(destination.writable, unusedStderr.writable);
+  const epipe = Object.assign(new Error("broken pipe"), { code: "EPIPE" });
+  const observedDestinationError = new Promise<Error>((resolve) =>
+    destination.writable.once("error", resolve),
+  );
+  const observedStreamError = new Promise<Error>((resolve) =>
+    stream.once("error", resolve),
+  );
+
+  const writeError = new Promise<Error | null | undefined>((resolve) => {
+    stream.write({ level: "info", message: "message" }, resolve);
+  });
+  destination.complete(epipe);
+
+  t.is(await writeError, epipe);
+  t.is(await observedDestinationError, epipe);
+  t.is(await observedStreamError, epipe);
+});

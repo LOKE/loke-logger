@@ -1,6 +1,9 @@
 import test from "ava";
-import { Registry } from "prom-client";
-import { Registry as PrometheusIoRegistry } from "@prometheus-io/client";
+import { Counter, Registry } from "prom-client";
+import {
+  Counter as PrometheusIoCounter,
+  Registry as PrometheusIoRegistry,
+} from "@prometheus-io/client";
 import { metricsMiddleware } from "./metrics";
 import { LokeLogger } from "./logger";
 import { Writable } from "stream";
@@ -112,4 +115,18 @@ test("works with a @prometheus-io/client registry", async (t) => {
   logger.error("failure");
 
   t.regex(await registry.metrics(), /severity="error",domain="successor"} 1/);
+});
+
+test("the counter comes from the same package as the registry", (t) => {
+  const promClient = new Registry();
+  const prometheusIo = new PrometheusIoRegistry();
+
+  metricsMiddleware(promClient);
+  metricsMiddleware(prometheusIo);
+
+  t.true(promClient.getSingleMetric("log_messages_total") instanceof Counter);
+  t.true(
+    prometheusIo.getSingleMetric("log_messages_total") instanceof
+      PrometheusIoCounter,
+  );
 });
