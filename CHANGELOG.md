@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `metricsRegistry` now accepts a registry from either `@prometheus-io/client` (the successor package) or `prom-client`. Both are optional peer dependencies; the counter class is resolved at runtime from whichever package the registry itself came from.
+- The `metricsRegistry` option is typed against the new exported `MetricsRegistry` interface instead of `prom-client`'s `Registry`, so the package no longer needs prom-client types to compile.
+
 ## [4.0.0] — 2026-05-29
 
 ### Breaking changes

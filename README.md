@@ -83,12 +83,12 @@ Replaces literal newlines in log output with `\n` so each log entry stays on a s
 
 ### `metricsRegistry`
 
-Type: `Registry` (prom-client)
+Type: `Registry` (`@prometheus-io/client` or `prom-client`)
 
-A [prom-client](https://github.com/siimon/prom-client) registry to record log volume metrics into. Adds the counter `log_messages_total` with labels `domain` and `severity`.
+A [@prometheus-io/client](https://github.com/prometheus/client_js) or [prom-client](https://github.com/siimon/prom-client) registry to record log volume metrics into. Adds the counter `log_messages_total` with labels `domain` and `severity`. Whichever of the two packages is installed is used; neither is required unless you pass a registry.
 
 ```ts
-import { register } from "prom-client";
+import { register } from "@prometheus-io/client";
 import { createLogger } from "@loke/logger";
 
 const logger = createLogger({ metricsRegistry: register });
@@ -106,3 +106,4 @@ const logger = createLogger({ metricsRegistry: register });
 | `nullLogger`             | No-op logger for use in tests                        |
 | `LogFields`              | Type for structured field objects                    |
 | `Logger`                 | Interface for logger consumers                       |
+| `MetricsRegistry`        | Registry interface accepted by `metricsRegistry`     |

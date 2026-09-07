@@ -1,5 +1,6 @@
 import test from "ava";
 import { Registry } from "prom-client";
+import { Registry as PrometheusIoRegistry } from "@prometheus-io/client";
 import { metricsMiddleware } from "./metrics";
 import { LokeLogger } from "./logger";
 import { Writable } from "stream";
@@ -94,4 +95,21 @@ test("duplicate middleware registration remains accepted", (t) => {
   metricsMiddleware(registry);
 
   t.notThrows(() => metricsMiddleware(registry));
+});
+
+test("works with a @prometheus-io/client registry", async (t) => {
+  const registry = new PrometheusIoRegistry();
+  const stream = new Writable({
+    objectMode: true,
+    write(chunk, encoding, callback) {
+      callback();
+    },
+  });
+  const logger = metricsMiddleware(registry)(
+    new LokeLogger({ streams: [stream], domain: "successor" }),
+  );
+
+  logger.error("failure");
+
+  t.regex(await registry.metrics(), /severity="error",domain="successor"} 1/);
 });

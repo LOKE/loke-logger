@@ -35,9 +35,19 @@
     "glossy": "^0.1.7"
   },
   "peerDependencies": {
+    "@prometheus-io/client": ">=0.16",
     "prom-client": ">=12 <=15"
   },
+  "peerDependenciesMeta": {
+    "@prometheus-io/client": {
+      "optional": true
+    },
+    "prom-client": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@prometheus-io/client": "^0.16.1",
     "@types/node": "^24.12.4",
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
