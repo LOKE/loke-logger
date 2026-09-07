@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- **Breaking:** the `escapeNewlines` option and its `KUBERNETES_SERVICE_HOST` default are gone, along with the third `ConsoleStream` constructor argument. logfmt quoting already escapes newlines in every message, domain and field, so the option could never change the output.
+- **Breaking:** the `escapeNewlines` option is gone. logfmt quoting already escapes newlines in every message, domain and field, so the option could never change the output.
+- New `pretty` option, on by default unless `KUBERNETES_SERVICE_HOST` is set, expands those escapes again so error stacks are readable in local development. It replaces `escapeNewlines` as the third `ConsoleStream` constructor argument.
 - `metricsRegistry` now accepts a registry from either `@prometheus-io/client` (the successor package) or `prom-client`. Both are optional peer dependencies; the counter class is resolved at runtime from whichever package the registry itself came from.
 - The `metricsRegistry` option is typed against the new exported `MetricsRegistry` interface instead of `prom-client`'s `Registry`, so the package no longer needs prom-client types to compile.
 

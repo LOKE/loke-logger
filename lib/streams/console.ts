@@ -23,10 +23,15 @@ function handleDefaultDestinationErrors(stream: NodeJS.WritableStream): void {
 export class ConsoleStream extends Writable {
   stdout: NodeJS.WritableStream;
   stderr: NodeJS.WritableStream;
+  pretty: boolean;
   private readonly defaultStdout: boolean;
   private readonly defaultStderr: boolean;
 
-  constructor(stdout?: NodeJS.WritableStream, stderr?: NodeJS.WritableStream) {
+  constructor(
+    stdout?: NodeJS.WritableStream,
+    stderr?: NodeJS.WritableStream,
+    pretty = false,
+  ) {
     super({ objectMode: true });
     this.defaultStdout = stdout === undefined;
     this.defaultStderr = stderr === undefined;
@@ -34,10 +39,15 @@ export class ConsoleStream extends Writable {
     this.stderr = stderr ?? process.stderr;
     if (this.defaultStdout) handleDefaultDestinationErrors(this.stdout);
     if (this.defaultStderr) handleDefaultDestinationErrors(this.stderr);
+    this.pretty = pretty;
   }
 
   _write(log: Log, _: string, callback: (error?: Error | null) => void): void {
-    const { level, message } = log;
+    const { level } = log;
+    // Undoes logfmt escaping wholesale, so a literal "\n" in text expands too.
+    const message = this.pretty
+      ? log.message.replace(/\\n/g, "\n")
+      : log.message;
 
     const destination =
       level === "error" || level === "warn" ? this.stderr : this.stdout;

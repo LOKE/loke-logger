@@ -74,6 +74,14 @@ Default: `false`
 
 Adds syslog UDP output alongside console output.
 
+### `pretty`
+
+Type: `boolean`
+
+Default: `false` when `KUBERNETES_SERVICE_HOST` is set, otherwise `true`
+
+Expands the `\n` escapes that logfmt quoting produces, so error stacks are readable in local development. Log entries may then span multiple lines, which is why it is off under Kubernetes.
+
 ### `metricsRegistry`
 
 Type: `Registry` (`@prometheus-io/client` or `prom-client`)

@@ -354,3 +354,48 @@ test("does not suppress EPIPE errors from an injected destination", async (t) =>
   t.is(await observedDestinationError, epipe);
   t.is(await observedStreamError, epipe);
 });
+
+test("pretty expands escaped newlines, plain output keeps them escaped", async (t) => {
+  const stack = 'level=error msg="failed" error="Error: boom\\n    at handler"';
+  const plain = createTestWritable();
+  const pretty = createTestWritable();
+  const plainStream = new ConsoleStream(plain.writable, plain.writable);
+  const prettyStream = new ConsoleStream(
+    pretty.writable,
+    pretty.writable,
+    true,
+  );
+
+  const plainWritten = plain.nextWrite();
+  plainStream.write({ level: "error", message: stack });
+  t.is(await plainWritten, `${stack}\n`);
+
+  const prettyWritten = pretty.nextWrite();
+  prettyStream.write({ level: "error", message: stack });
+  t.is(
+    await prettyWritten,
+    'level=error msg="failed" error="Error: boom\n    at handler"\n',
+  );
+});
+
+test("createLogger prints pretty locally and escaped under kubernetes", (t) => {
+  const script = `
+    const { createLogger } = require("./dist");
+    createLogger().error("failed", { error: Object.assign(new Error("boom"), { stack: "Error: boom\\n    at handler" }) });
+  `;
+  const run = (env: NodeJS.ProcessEnv) =>
+    spawnSync(process.execPath, ["-e", script], {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      env: { ...process.env, ...env },
+    }).stderr;
+
+  t.is(
+    run({ KUBERNETES_SERVICE_HOST: "" }),
+    'level=error msg=failed error="Error: boom\n    at handler"\n',
+  );
+  t.is(
+    run({ KUBERNETES_SERVICE_HOST: "10.0.0.1" }),
+    'level=error msg=failed error="Error: boom\\n    at handler"\n',
+  );
+});
